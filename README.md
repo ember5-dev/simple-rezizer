@@ -46,7 +46,7 @@ Entre na pasta:
 cd simple-resizer
 ```
 
-Abra o `index.html` no navegador.
+Abra o `simple-rezizer` no navegador.
 
 Não é necessário instalar dependências.
 
