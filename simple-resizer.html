@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Resizer</title>
+    <style>
+        :root {
+            --bg: #E8DCC8;
+            --surface: #FCF9F2;
+            --surface-soft: #F5F0E6;
+            --text: #35463D;
+            --text-muted: #6F7069;
+            --border: #D8CCB8;
+            --primary: #405C4C;
+            --primary-hover: #30483C;
+            --accent: #6F8A68;
+            --accent-soft: #A8B5A2;
+            --focus: #718B96;
+            --danger: #9A6258;
+            --shadow: 0 10px 30px rgba(53, 70, 61, 0.10);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 32px 20px 48px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 28px;
+            color: var(--text);
+            font-size: clamp(2rem, 5vw, 3rem);
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+        }
+
+        h2 {
+            margin: 0 0 10px;
+            color: var(--text);
+            font-size: 1.35rem;
+        }
+
+        .section {
+            width: min(100%, 1080px);
+            margin: 0 auto 14px;
+            padding: 18px;
+            background: rgba(252, 249, 242, 0.82);
+            border: 1px solid rgba(216, 204, 184, 0.8);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+        }
+
+        label {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        input:not([type="checkbox"]),
+        button,
+        select {
+            min-height: 44px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 13px;
+            font: inherit;
+            color: var(--text);
+            background: var(--surface);
+            transition: border-color .2s ease, box-shadow .2s ease, background .2s ease, transform .15s ease;
+        }
+
+        input:not([type="checkbox"]),
+        select {
+            cursor: text;
+        }
+
+        select { cursor: pointer; }
+
+        button {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: #FFFFFF;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: .55;
+        }
+
+        input:not([type="checkbox"]):focus,
+        select:focus,
+        button:focus-visible,
+        input:focus-visible,
+        .image-preview img:focus-visible {
+            outline: none;
+            border-color: var(--focus);
+            box-shadow: 0 0 0 3px rgba(113, 139, 150, .25);
+        }
+
+        .dimension-input {
+            width: 205px;
+            min-width: 0;
+        }
+
+        .checkbox-option {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        #imagesContainer {
+            margin-top: 20px;
+        }
+
+        #noImagesMessage {
+            color: var(--text-muted);
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        a:hover { text-decoration: underline; }
+
+        #generatedImagesList {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        #generatedImagesList > div {
+            padding: 12px;
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 22px 12px 36px; }
+
+            .section {
+                padding: 14px;
+                border-radius: 13px;
+            }
+
+            input:not([type="checkbox"]),
+            button,
+            select {
+                width: 100%;
+            }
+
+            input[type="checkbox"] {
+                width: 18px;
+            }
+        }
+
+        #popup,
+        #progressPopup {
+            position: fixed;
+            inset: 0;
+            background: rgba(53, 70, 61, .48);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        #popupContent,
+        #progressContent {
+            width: min(100%, 420px);
+            padding: 24px;
+            text-align: center;
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        #popupMessage,
+        #progressMessage {
+            margin: 0 0 18px;
+            white-space: pre-line;
+            color: var(--text);
+        }
+
+        #closePopup {
+            background: var(--primary);
+            color: #FFFFFF;
+        }
+
+        #progressBar {
+            width: 100%;
+            height: 12px;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+        }
+
+        #progressBarFill {
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 0%;
+            background: var(--accent);
+            border-radius: inherit;
+            transition: width .3s ease;
+        }
+
+        .image-preview {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 0;
+        }
+
+        .image-preview img {
+            max-width: 120px;
+            max-height: 120px;
+            margin-right: 0;
+            border: 2px solid var(--accent-soft);
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        #imageModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            overflow: hidden;
+            background: rgba(35, 43, 39, .82);
+        }
+
+        #imageModal img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 80%;
+            max-height: 80%;
+            margin: auto;
+            display: block;
+            border: 2px solid var(--surface);
+            border-radius: 8px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
+            transition: transform .25s ease, left .25s ease, top .25s ease;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .closeModal {
+            position: absolute;
+            top: 16px;
+            right: 22px;
+            z-index: 1001;
+            width: auto;
+            min-height: 44px;
+            padding: 0 10px;
+            border: 0;
+            background: transparent;
+            color: #FFFFFF;
+            font-size: 38px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .closeModal:hover {
+            background: rgba(255,255,255,.12);
+            transform: none;
+        }
+
+        .placeholder-rosa::placeholder {
+            color: var(--text-muted);
+        }
+
+        .desativar-interacao {
+            pointer-events: none;
+        }
+    
+/* English file input */
+.file-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.file-input-wrap input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.file-input-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--primary);
+  border-radius: 12px;
+  background: var(--primary);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s ease, transform .2s ease;
+}
+.file-input-button:hover {
+  background: var(--primary-hover);
+}
+.file-input-button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.file-input-name {
+  color: var(--text-muted);
+  font-size: .95rem;
+}
+
+</style>
+</head>
+<body>
+    <h1>Simple Resizer</h1>
+
+    <div class="section" style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
+        <label for="imageInput">Choose image:</label>
+        <div class="file-input-wrap">
+  <input id="imageInput" type="file" multiple accept="image/*">
+  <label class="file-input-button" for="imageInput">Choose Files</label>
+  <span class="file-input-name" id="imageInputName">No file chosen</span>
+</div>
+    
+        <label for="fileType">Convert to:</label>
+        <select id="fileType">
+            <option value="original">Keep original type</option>
+            <option value="png">PNG</option>
+            <option value="jpeg">JPEG</option>
+            <option value="webp">WebP</option>
+        </select>
+    
+        <label for="imageQuality" id="imageQualityLabel" style="display: none;">Quality:</label>
+        <select id="imageQuality" style="display: none;">
+            <option value="1.0">100%</option>
+            <option value="0.9">90%</option>
+            <option value="0.8">80%</option>
+            <option value="0.7">70%</option>
+            <option value="0.6">60%</option>
+            <option value="0.5">50%</option>
+            <option value="0.4">40%</option>
+            <option value="0.3">30%</option>
+            <option value="0.2">20%</option>
+            <option value="0.1">10%</option>
+        </select>
+    </div>    
+
+    <div class="section" style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
+        <label for="horizontal">Width (px):</label>
+        <input type="text" id="horizontal" class="dimension-input" maxlength="4" inputmode="numeric" pattern="[0-9]{1,4}" placeholder="Enter a value">
+
+        <label for="vertical">Height (px):</label>
+        <input type="text" id="vertical" class="dimension-input" maxlength="4" inputmode="numeric" pattern="[0-9]{1,4}" placeholder="Enter a value">
+
+        <label class="checkbox-option">
+            <input type="checkbox" id="keepOriginalSize">
+            Keep original size
+        </label>
+    </div>
+
+    <div class="section" style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
+        <label for="resizeMode">Mode:</label>
+        <select id="resizeMode">
+            <option value="stretch" selected>Stretch image</option>
+            <option value="transparent">Add a transparent background</option>
+            <option value="blurred">Add a blurred background</option>
+        </select>
+
+        <label for="preset">Size preset:</label>
+        <select id="preset">
+            <option value="">Custom</option>
+            <option value="1920x1080">Full HD image (1920x1080)</option>
+            <option value="3840x2160">4K Image (3840x2160)</option>
+            <option value="1080x1080">Instagram - Square (1080x1080)</option>
+            <option value="1080x1350">Instagram - Portrait (1080x1350)</option>
+            <option value="1080x566">Instagram - Landscape (1080x566)</option>
+            <option value="320x320">Instagram - Profile Picture (320x320)</option>
+            <option value="1080x1920">Instagram - Stories (1080x1920)</option>
+            <option value="2560x1440">YouTube - Banner (2560x1440)</option>
+            <option value="1546x423">YouTube - Safe Zone (1546x423)</option>
+            <option value="1280x720">YouTube - Thumbnail (1280x720)</option>
+            <option value="1200x1200">Facebook - Square Post (1200x1200)</option>
+            <option value="1200x630">Facebook - Rectangular Post(1200x630)</option>
+            <option value="820x312">Facebook - Page Cover (820x312)</option>
+        </select>
+    </div>
+
+    <div class="section" style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
+        <button id="generateImages">Generate Images</button>
+        <button id="downloadAll" disabled>Download All Images</button>
+        <button id="downloadZip" disabled>Download All Images in a ZIP File</button>
+        <label style="display:flex; align-items:center; gap:6px; color:#FF007A; cursor:pointer;">
+            <input type="checkbox" id="keepOriginalName">
+            Keep the original name
+        </label>
+    </div>
+
+    <div id="imagesContainer" class="section">
+        <h2>List of generated images:</h2>
+        <p id="noImagesMessage">No images have been generated yet.</p>
+        <div id="generatedImagesList"></div>
+    </div>
+
+    <div id="popup" role="dialog" aria-modal="true" aria-labelledby="popupMessage" style="display: none;">
+        <div id="popupContent" tabindex="-1">
+            <p id="popupMessage">No images have been generated yet.</p>
+            <button id="closePopup">Close</button>
+        </div>
+    </div>
+    
+    <div id="progressPopup" role="dialog" aria-modal="true" aria-labelledby="progressMessage" aria-live="polite" style="display: none;">
+        <div id="progressContent" tabindex="-1">
+            <p id="progressMessage">Generating images...</p>
+            <div id="progressBar" role="progressbar" aria-label="Generation progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div id="progressBarFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal to visualização de image -->
+    <div id="imageModal" role="dialog" aria-modal="true" aria-label="Expanded image preview">
+        <button type="button" class="closeModal" aria-label="Close preview">&times;</button>
+        <img id="modalImage" alt="Pré-visualização ampliada">
+    </div>
+
+    <script src="https://cdnjs.cloudflare.with/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        const generatedImagesList = document.getElementById('generatedImagesList');
+        const noImagesMessage = document.getElementById('noImagesMessage');
+        const downloadAllButton = document.getElementById('downloadAll');
+        const generateImagesButton = document.getElementById('generateImages');
+        const downloadZipButton = document.getElementById('downloadZip');
+        const FORMAT_CONFIG = {
+            png: { mime: 'image/png', extension: 'png' },
+            jpeg: { mime: 'image/jpeg', extension: 'jpg' },
+            webp: { mime: 'image/webp', extension: 'webp' }
+        };
+        const MIME_FORMATS = { 'image/png': 'png', 'image/jpeg': 'jpeg', 'image/webp': 'webp' };
+        const objectUrls = new Set();
+        let generatedImages = [];
+        let generationId = 0;
+        let lastGenerationDescription = 'rezize images';
+        let previouslyFocusedElement = null;
+
+        let totalImages = 0;
+        let processedImages = 0;
+        let imageProgress = [];
+
+        // Variáveis to controle do zoom
+        let modalImg = document.getElementById('modalImage');
+        let scale = 1;
+        const MIN_SCALE = 1;
+        const MAX_SCALE = 6;
+        const ZOOM_SPEED = 0.1;
+        let lastTouchDistance = null;
+
+        let isDragging = false;
+        let initialX, initialY;
+        let offsetX = 0, offsetY = 0;
+
+        const horizontalInput = document.getElementById('horizontal');
+        const verticalInput = document.getElementById('vertical');
+        const keepOriginalSizeInput = document.getElementById('keepOriginalSize');
+
+        function updateOriginalSizeState() {
+            const keepOriginalSize = keepOriginalSizeInput.checked;
+            horizontalInput.disabled = keepOriginalSize;
+            verticalInput.disabled = keepOriginalSize;
+            horizontalInput.placeholder = keepOriginalSize ? 'Original' : 'Enter a value';
+            verticalInput.placeholder = keepOriginalSize ? 'Original' : 'Enter a value';
+            horizontalInput.classList.toggle('placeholder-rosa', keepOriginalSize);
+            verticalInput.classList.toggle('placeholder-rosa', keepOriginalSize);
+            horizontalInput.classList.toggle('desativar-interacao', keepOriginalSize);
+            verticalInput.classList.toggle('desativar-interacao', keepOriginalSize);
+
+            if (keepOriginalSize) {
+                horizontalInput.value = '';
+                verticalInput.value = '';
+                document.getElementById('preset').value = '';
+            }
+        }
+
+        keepOriginalSizeInput.addEventListener('change', updateOriginalSizeState);
+
+        // Image size preset
+        document.getElementById('preset').addEventListener('change', function() {
+            keepOriginalSizeInput.checked = false;
+            updateOriginalSizeState();
+
+            const presetValues = this.value.split('x');
+            if (presetValues.length === 2) {
+                horizontalInput.value = presetValues[0];
+                verticalInput.value = presetValues[1];
+            }
+        });
+
+        // Generate images when clicking the button
+        generateImagesButton.addEventListener('click', function() {
+            document.getElementById('progressBarFill').style.width = '0%'; // Zera a barra de progresso
+            document.getElementById('progressBar').setAttribute('aria-valuenow', '0');
+            document.getElementById('progressMessage').textContent = 'Generating images...';
+
+            if (document.getElementById('imageInput').files.length === 0) {
+                showPopup('Select at least one image to generate.');
+                return;
+            }
+
+            const files = document.getElementById('imageInput').files;
+
+            const width = Number(document.getElementById('horizontal').value);
+            const height = Number(document.getElementById('vertical').value);
+
+            const resizeMode = document.getElementById('resizeMode').value;
+            const keepOriginalSize = keepOriginalSizeInput.checked;
+            const keepOriginalName = document.getElementById('keepOriginalName').checked;
+            const imageQuality = Number(document.getElementById('imageQuality').value);
+
+            if (!keepOriginalSize && (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > 5000 || height > 5000)) {
+                showPopup('Width and height must be whole numbers between 1 and 5000.');
+                return;
+            }
+
+            const fileType = document.getElementById('fileType').value;
+
+            releaseObjectUrls();
+            generatedImagesList.replaceChildren();
+            noImagesMessage.style.display = 'none';
+            generatedImages = new Array(files.length);
+            totalImages = files.length;
+            processedImages = 0;
+            imageProgress = new Array(totalImages).fill(0);
+            const currentGenerationId = ++generationId;
+            const processingMessages = [];
+            const usedFileNames = new Set();
+            const resultSlots = Array.from({ length: totalImages }, () => document.createElement('div'));
+            generatedImagesList.append(...resultSlots);
+            lastGenerationDescription = keepOriginalSize
+                ? 'Images at Original Size'
+                : `Resized Images (${width}x${height})`;
+
+            showProgressPopup(); // Mostra o pop-up de progresso
+            generateImagesButton.disabled = true;
+            downloadAllButton.disabled = true;
+            downloadZipButton.disabled = true;
+
+            const finishImage = (index, message = '') => {
+                if (currentGenerationId !== generationId || imageProgress[index] === 100) return;
+
+                if (message) processingMessages.push(message);
+                imageProgress[index] = 100;
+                processedImages++;
+                updateProgressBar();
+
+                if (processedImages === totalImages) {
+                    const hasGeneratedImages = generatedImages.some(Boolean);
+                    generateImagesButton.disabled = false;
+                    downloadAllButton.disabled = !hasGeneratedImages;
+                    downloadZipButton.disabled = !hasGeneratedImages;
+                    closeProgressPopup();
+                    noImagesMessage.style.display = hasGeneratedImages ? 'none' : 'block';
+
+                    if (processingMessages.length > 0) {
+                        showPopup(processingMessages.join('\n'));
+                    }
+                }
+            };
+
+            Array.from(files).forEach((file, index) => {
+                const originalFileSize = file.size; // Size do file original em bytes
+                const img = new Image();
+                const sourceUrl = URL.createObjectURL(file);
+                img.onerrorr = function() {
+                    URL.revokeObjectURL(sourceUrl);
+                    finishImage(index, `O file "${file.name}" não é uma image válida ou suportada.`);
+                };
+
+                img.onload = function() {
+                    URL.revokeObjectURL(sourceUrl);
+                    if (currentGenerationId !== generationId) return;
+
+                    try {
+
+                    if (keepOriginalSize && (img.width > 5000 || img.height > 5000)) {
+                        finishImage(index, `"${file.name}" ultrapassa o limite de 5000 px.`);
+                        return;
+                    }
+
+                    let outputFormat = fileType;
+                    if (fileType === 'original') {
+                        outputFormat = MIME_FORMATS[file.type.toLowerCase()] || 'png';
+                        if (!MIME_FORMATS[file.type.toLowerCase()]) {
+                            processingMessages.push(`"${file.name}" foi convertido to PNG porque seu formato original não pode ser exportado pelo navegador.`);
+                        }
+                    }
+                    const format = FORMAT_CONFIG[outputFormat];
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) throw new Errorr('Canvas 2D indisponível.');
+
+                    // Configura o size do canvas
+                    if (keepOriginalSize) {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                    } else {
+                        canvas.width = width;
+                        canvas.height = height;
+                    }
+
+                    if (format.mime === 'image/jpeg') {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    }
+
+                    // Desenha a image no canvas
+                    if (keepOriginalSize) {
+                        ctx.drawImage(img, 0, 0);
+                    } else if (resizeMode === 'stretch') {
+                        ctx.drawImage(img, 0, 0, width, height);
+                    } else {
+                        const scale = Math.min(width / img.width, height / img.height);
+                        const finalWidth = img.width * scale;
+                        const finalHeight = img.height * scale;
+                        const offsetX = (width - finalWidth) / 2;
+                        const offsetY = (height - finalHeight) / 2;
+
+                        if (resizeMode === 'blurred') {
+                            const bgScale = Math.max(width / img.width, height / img.height);
+                            const bgWidth = img.width * bgScale;
+                            const bgHeight = img.height * bgScale;
+                            const bgX = (width - bgWidth) / 2;
+                            const bgY = (height - bgHeight) / 2;
+
+                            ctx.filter = 'blur(24px)';
+                            ctx.drawImage(img, bgX, bgY, bgWidth, bgHeight);
+                            ctx.filter = 'none';
+                        }
+
+                        ctx.drawImage(img, offsetX, offsetY, finalWidth, finalHeight);
+                    }
+
+                    // Determina o novo nome do file
+                    const originalBaseName = file.name.replace(/\.[^/.]+$/, '');
+                    const fileExtension = format.extension;
+                    let newFileName;
+
+                    if (keepOriginalName) {
+                        newFileName = `${originalBaseName}.${fileExtension}`;
+                    } else {
+                        if (keepOriginalSize) {
+                            newFileName = `${originalBaseName} (${img.width}x${img.height}).${fileExtension}`;
+                        } else {
+                            newFileName = `${originalBaseName} (${width}x${height}).${fileExtension}`;
+                        }
+                    }
+                    newFileName = createUniqueFileName(newFileName, usedFileNames);
+
+                        // Cria um link to download da image
+                        canvas.toBlob(blob => {
+                            if (currentGenerationId !== generationId) return;
+
+                            if (blob && blob.type === format.mime) {
+                                // Obtém o size do novo file
+                                const newFileSize = blob.size;
+
+                                // Atualiza o progresso individual e total
+                                const downloadLink = document.createElement('a');
+                                const objectUrl = URL.createObjectURL(blob);
+                                objectUrls.add(objectUrl);
+                                downloadLink.href = objectUrl;
+                                downloadLink.download = newFileName;
+                                
+                                // Formatação dos sizes (de bytes to KB ou MB)
+                                const formatFileSize = (size) => {
+                                    if (size < 1024) return `${size} bytes`;
+                                    if (size < 1048576) return `${(size / 1024).toFixed(2)} KB`;
+                                    return `${(size / 1048576).toFixed(2)} MB`;
+                                };
+
+                                const downloadLabel = document.createElement('span');
+                                downloadLabel.style.color = '#00FFFF';
+                                downloadLabel.textContent = 'Download: ';
+                                const fileNameLabel = document.createElement('span');
+                                fileNameLabel.style.color = 'white';
+                                fileNameLabel.textContent = newFileName;
+                                const sizeLabel = document.createElement('span');
+                                sizeLabel.style.color = '#00FFFF';
+                                sizeLabel.textContent = `(Before: ${formatFileSize(originalFileSize)}, After: ${formatFileSize(newFileSize)})`;
+                                downloadLink.append(downloadLabel, fileNameLabel, document.createElement('br'), sizeLabel);
+
+                                // Cria o contêiner da pré-visualização
+                                const previewContainer = document.createElement('div');
+                                previewContainer.classList.add('image-preview');
+                                
+                                // Adiciona a pré-visualização da image
+                                const previewImage = document.createElement('img');
+                                previewImage.src = objectUrl;
+                                previewImage.alt = `Preview of ${newFileName}`;
+                                previewImage.tabIndex = 0;
+                                previewImage.addEventListener('click', function() {
+                                    openImageModal(previewImage.src);
+                                });
+                                previewImage.addEventListener('keydown', function(event) {
+                                    if (event.key === 'Enter' || event.key === ' ') {
+                                        event.preventDefault();
+                                        openImageModal(previewImage.src);
+                                    }
+                                });
+                                previewContainer.appendChild(previewImage);
+
+                                // Adiciona o link de download
+                                previewContainer.appendChild(downloadLink);
+
+                                // Adiciona o contêiner ao DOM
+                                resultSlots[index].replaceChildren(previewContainer);
+
+                                generatedImages[index] = { name: newFileName, blob, url: objectUrl };
+                                finishImage(index);
+                            } else {
+                                finishImage(index, `Não foi possível converter "${file.name}" to ${format.extension.toUpperCase()}.`);
+                            }
+                        }, format.mime, ['jpeg', 'webp'].includes(outputFormat) ? imageQuality : undefined);
+                    } catch (errorr) {
+                        console.errorr(errorr);
+                        finishImage(index, `Ocorreu um error ao processar "${file.name}".`);
+                    }
+                };
+                img.src = sourceUrl;
+            });
+        });
+
+        // Download All Images
+        downloadAllButton.addEventListener('click', function() {
+            const availableImages = generatedImages.filter(Boolean);
+            if (availableImages.length === 0) {
+                showPopup('No images were generated to download.');
+                return;
+            }
+
+            availableImages.forEach(({ url, name }) => {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
+        });
+
+        // Download All Images em ZIP
+        downloadZipButton.addEventListener('click', async function() {
+            const availableImages = generatedImages.filter(Boolean);
+            if (availableImages.length === 0) {
+                showPopup('No images were generated to download as a ZIP.');
+                return;
+            }
+
+            if (typeof JSZip === 'undefined') {
+                showPopup('Could not load the ZIP generator. Check your connection and try again.');
+                return;
+            }
+
+            downloadZipButton.disabled = true;
+            try {
+                const zip = new JSZip();
+                availableImages.forEach(({ name, blob }) => zip.file(name, blob));
+                const content = await zip.generateAsync({ type: 'blob' });
+                const zipUrl = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = zipUrl;
+                a.download = `${lastGenerationDescription}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(zipUrl), 1000);
+            } catch (errorr) {
+                console.errorr(errorr);
+                showPopup('Could not create the ZIP file.');
+            } finally {
+                downloadZipButton.disabled = false;
+            }
+        });
+
+        // Show or hide JPEG and WebP quality control
+        document.getElementById('fileType').addEventListener('change', function() {
+            const imageQualityLabel = document.getElementById('imageQualityLabel');
+            const imageQualitySelect = document.getElementById('imageQuality');
+            const showQuality = ['jpeg', 'webp'].includes(this.value);
+            imageQualityLabel.style.display = showQuality ? 'inline' : 'none';
+            imageQualitySelect.style.display = showQuality ? 'inline' : 'none';
+        });
+
+        function createUniqueFileName(fileName, usedNames) {
+            if (!usedNames.has(fileName.toLowerCase())) {
+                usedNames.add(fileName.toLowerCase());
+                return fileName;
+            }
+
+            const dotIndex = fileName.lastIndexOf('.');
+            const baseName = dotIndex > 0 ? fileName.slice(0, dotIndex) : fileName;
+            const extension = dotIndex > 0 ? fileName.slice(dotIndex) : '';
+            let suffix = 2;
+            let candidate;
+
+            do {
+                candidate = `${baseName} (${suffix++})${extension}`;
+            } while (usedNames.has(candidate.toLowerCase()));
+
+            usedNames.add(candidate.toLowerCase());
+            return candidate;
+        }
+
+        function releaseObjectUrls() {
+            objectUrls.forEach(url => URL.revokeObjectURL(url));
+            objectUrls.clear();
+        }
+
+        // Show exception popup
+        function showPopup(message) {
+            const popup = document.getElementById('popup');
+            const popupMessage = document.getElementById('popupMessage');
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement !== document.body && activeElement.offsetParent !== null) {
+                previouslyFocusedElement = activeElement;
+            }
+            popupMessage.textContent = message;
+            popup.style.display = 'flex';
+            document.getElementById('closePopup').focus();
+        }
+
+        // Close exception popup
+        document.getElementById('closePopup').addEventListener('click', function() {
+            document.getElementById('popup').style.display = 'none';
+            previouslyFocusedElement?.focus();
+        });
+
+        // Show progress popup
+        function showProgressPopup() {
+            previouslyFocusedElement = document.activeElement;
+            document.getElementById('progressPopup').style.display = 'flex';
+            document.getElementById('progressContent').focus();
+        }
+
+        // Update progress bar
+        function updateProgressBar() {
+            const totalProgress = imageProgress.reduce((sum, progress) => sum + progress, 0) / totalImages;
+            document.getElementById('progressBarFill').style.width = `${totalProgress}%`;
+            const progressBar = document.getElementById('progressBar');
+            progressBar.setAttribute('aria-valuenow', Math.round(totalProgress));
+            document.getElementById('progressMessage').textContent = `Generating images... ${processedImages} de ${totalImages}`;
+        }
+
+        // Close progress popup
+        function closeProgressPopup() {
+            document.getElementById('progressPopup').style.display = 'none';
+            previouslyFocusedElement?.focus();
+        }
+
+        // Open image modal
+        function openImageModal(src) {
+            const modal = document.getElementById('imageModal');
+            previouslyFocusedElement = document.activeElement;
+            resetZoom();
+            modalImg.src = src;
+            modal.style.display = "block";
+            document.querySelector('.closeModal').focus();
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+            resetZoom();
+            previouslyFocusedElement?.focus();
+        }
+
+        // Close modal when clicking the X
+        document.querySelector('.closeModal').addEventListener('click', closeImageModal);
+
+        // Close modal when clicking outside the image
+        document.getElementById('imageModal').addEventListener('click', function(event) {
+            if (event.target === document.getElementById('imageModal')) {
+                closeImageModal();
+            }
+        });
+
+        // Zoom in, focusing on the center
+        function applyZoom(e) {
+            e.preventDefault();
+
+            if (scale === 1) {
+                scale = 1.5;
+            } else if (scale === 1.5) {
+                scale = 2;
+            } else {
+                scale = 1;
+                offsetX = 0;
+                offsetY = 0;
+            }
+            updateTransform();
+        }
+        // Detect double-tap on mobile devices
+        let lastTouchEnd = 0;
+        modalImg.addEventListener('touchend', function(e) {
+            const now = new Date().getTime();
+            if (now - lastTouchEnd <= 300) {
+                applyZoom(e);
+            }
+            lastTouchEnd = now;
+        });
+        // Add desktop and mobile events
+        modalImg.addEventListener('dblclick', applyZoom);
+
+        // Reset zoom when closing the modal or clicking the image again
+        function resetZoom() {
+            scale = 1;
+            offsetX = 0;
+            offsetY = 0;
+            modalImg.style.marginLeft = '0px';
+            modalImg.style.marginTop = '0px';
+            updateTransform();
+        }
+
+        function updateTransform() {
+            modalImg.style.transform =
+                `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px)) scale(${scale})`;
+        }
+
+        // Prevent default image dragging
+        modalImg.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+        });
+
+        modalImg.addEventListener('drag', function(e) {
+            e.preventDefault();
+        });
+
+        // Start movement (mouse and touch)
+        function startDrag(e) {
+            if (e.touches && e.touches.length !== 1) {
+                isDragging = false;
+                return;
+            }
+            e.preventDefault();
+            isDragging = true;
+            initialX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
+            initialY = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
+            modalImg.style.cursor = 'grabbing';
+        }
+
+        // Move the image (mouse e toque)
+        function moveImage(e) {
+            if (isDragging) {
+                const currentX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
+                const currentY = e.type === 'mousemove' ? e.clientY : e.touches[0].clientY;
+
+                const deltaX = currentX - initialX;
+                const deltaY = currentY - initialY;
+
+                offsetX += deltaX;
+                offsetY += deltaY;
+                updateTransform();
+
+                // Update initial positions for the next movement
+                initialX = currentX;
+                initialY = currentY;
+            }
+        }
+
+        // Stop movement (mouse and touch)
+        function stopDrag() {
+            isDragging = false;
+            modalImg.style.cursor = 'grab';
+        }
+
+        // Add mouse and touch events
+        modalImg.addEventListener('mousedown', startDrag);
+        modalImg.addEventListener('touchstart', startDrag);
+
+        modalImg.addEventListener('mousemove', moveImage);
+        modalImg.addEventListener('touchmove', moveImage);
+
+        modalImg.addEventListener('mouseup', stopDrag);
+        modalImg.addEventListener('touchend', stopDrag);
+
+        // Stop movement when the mouse leaves the image
+        modalImg.addEventListener('mouseleave', function() {
+            isDragging = false;
+            modalImg.style.cursor = 'grab';
+        });
+
+        function handleDimensionInput() {
+            this.value = this.value
+                .replace(/\D/g, '')
+                .slice(0, 4)
+                .replace(/^0+(?=\d)/, '');
+            document.getElementById('preset').value = '';
+        }
+
+        horizontalInput.addEventListener('input', handleDimensionInput);
+        verticalInput.addEventListener('input', handleDimensionInput);
+
+        modalImg.addEventListener('wheel', function (e) {
+            e.preventDefault();
+
+            const delta = e.deltaY < 0 ? 1 : -1;
+            let newScale = scale + delta * ZOOM_SPEED;
+
+            newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, newScale));
+
+            if (newScale === scale) return;
+
+            scale = newScale;
+            updateTransform();
+        }, { passive: false });
+
+        modalImg.addEventListener('touchmove', function (e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (lastTouchDistance) {
+                    let zoomChange = (distance - lastTouchDistance) * 0.005;
+                    let newScale = scale + zoomChange;
+
+                    newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, newScale));
+                    scale = newScale;
+                    updateTransform();
+                }
+
+                lastTouchDistance = distance;
+            }
+        }, { passive: false });
+
+        modalImg.addEventListener('touchend', function (event) {
+            if (event.touches.length < 2) {
+                lastTouchDistance = null;
+            }
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key !== 'Escape') return;
+
+            if (document.getElementById('imageModal').style.display === 'block') {
+                closeImageModal();
+            } else if (document.getElementById('popup').style.display === 'flex') {
+                document.getElementById('popup').style.display = 'none';
+                previouslyFocusedElement?.focus();
+            }
+        });
+
+        window.addEventListener('beforeunload', releaseObjectUrls);
+    </script>
+</body>
+</html>
