@@ -63,7 +63,7 @@ Não é necessário instalar dependências.
 
 ```text
 simple-resizer/
-├── index.html
+├── simple-resizer.html
 ├── README.md
 └── LICENSE
 ```
