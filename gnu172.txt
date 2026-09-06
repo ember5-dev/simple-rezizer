@@ -1,0 +1,33 @@
+# GNU1672
+
+Desenvolvedor em aprendizado, interessado em desenvolvimento web, software livre e criação de ferramentas simples e úteis.
+
+## Sobre
+
+* Desenvolvendo projetos para aprender e experimentar
+* Interesse em **HTML, CSS e JavaScript**
+* Explorando desenvolvimento web e software livre
+* Buscando melhorar meus projetos continuamente
+
+## Projetos
+
+### Simple Resizer
+
+Ferramenta web para redimensionar e exportar imagens diretamente no navegador.
+
+* HTML, CSS e JavaScript
+* Processamento local no navegador
+* Suporte a diferentes formatos de imagem
+* Projeto simples e focado em privacidade
+
+## Tecnologias
+
+`HTML` · `CSS` · `JavaScript` · `Git` · `GitHub`
+
+## Objetivo
+
+Aprender, construir e compartilhar projetos.
+
+---
+
+**GNU1672**
