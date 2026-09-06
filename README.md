@@ -51,16 +51,11 @@ Abra o `simple-rezizer` no navegador.
 Não é necessário instalar dependências.
 
 ## 🛠️ Tecnologias
-
-* HTML5
-* CSS3
-* JavaScript
-* Canvas API
-* File API
-* JSZip
-
+- HTML
+- CSS
+- JavaScript
+- JSZip                               
 ## 📁 Estrutura
-
 ```text
 simple-resizer/
 ├── simple-resizer.html
