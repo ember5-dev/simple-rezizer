@@ -76,9 +76,9 @@ Funciona em navegadores modernos, incluindo:
 
 * [ ] Drag and drop de imagens
 * [ ] Mais presets
-* [ ] Rotação de imagens
-* [ ] Espelhamento
-* [ ] Mais opções de otimização
+* [X] Rotação de imagens
+* [X] Espelhamento
+* [] Mais opções de otimização
 * [X] Modo escuro
 * [ ] Mais formatos de exportação
 
