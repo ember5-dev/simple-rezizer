@@ -79,7 +79,7 @@ Funciona em navegadores modernos, incluindo:
 * [ ] Rotação de imagens
 * [ ] Espelhamento
 * [ ] Mais opções de otimização
-* [ X ] Modo escuro
+* [X] Modo escuro
 * [ ] Mais formatos de exportação
 
 ## 🤝 Contribuindo
