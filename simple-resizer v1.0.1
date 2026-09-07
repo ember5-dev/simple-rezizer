@@ -449,7 +449,6 @@
             cursor: nwse-resize;
         }
 
-        /* Metadata & Editing tools styling */
         .tools-row {
             display: flex;
             align-items: center;
@@ -457,26 +456,6 @@
             gap: 8px;
             flex-wrap: wrap;
             margin-top: 10px;
-        }
-
-        .meta-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            text-align: left;
-            margin-top: 10px;
-            font-size: 0.92rem;
-        }
-
-        .meta-item {
-            background: var(--surface-soft);
-            border: 1px solid var(--border);
-            padding: 8px 12px;
-            border-radius: 8px;
-            word-break: break-all;
-        }
-        .meta-item strong {
-            color: var(--primary);
         }
     </style>
 </head>
@@ -517,21 +496,14 @@
         </select>
     </div>    
 
-    <!-- Rotation, Mirror & Metadata Section -->
+    <!-- Rotation & Mirror Tools Section -->
     <div class="section" id="editToolsSection" style="display: none;">
-        <h2>Image Adjustments & Metadata</h2>
+        <h2>Image Adjustments</h2>
         <div class="tools-row">
             <button type="button" id="rotateLeftBtn">↺ Rotate Left (90°)</button>
             <button type="button" id="rotateRightBtn">↻ Rotate Right (90°)</button>
             <button type="button" id="flipHBtn">↔ Flip Horizontal</button>
             <button type="button" id="flipVBtn">↕ Flip Vertical</button>
-        </div>
-
-        <div style="margin-top: 15px;">
-            <h3 style="margin: 0 0 5px; font-size: 1.05rem;">Metadata (EXIF / Properties):</h3>
-            <div id="metaContainer" class="meta-grid">
-                <div class="meta-item">No metadata loaded.</div>
-            </div>
         </div>
     </div>
 
@@ -553,6 +525,11 @@
 
         <label for="vertical">Height (px):</label>
         <input type="text" id="vertical" class="dimension-input" maxlength="4" inputmode="numeric" pattern="[0-9]{1,4}" placeholder="Enter a value">
+
+        <label class="checkbox-option">
+            <input type="checkbox" id="keepAspect" checked>
+            Maintain aspect ratio
+        </label>
 
         <label class="checkbox-option">
             <input type="checkbox" id="keepOriginalSize">
@@ -675,7 +652,10 @@
         const horizontalInput = document.getElementById('horizontal');
         const verticalInput = document.getElementById('vertical');
         const keepOriginalSizeInput = document.getElementById('keepOriginalSize');
+        const keepAspectInput = document.getElementById('keepAspect');
 
+        let originalImageWidth = 0;
+        let originalImageHeight = 0;
         let imageTransformations = {};
 
         imageInput.addEventListener('change', function() {
@@ -686,8 +666,6 @@
                 const firstFile = this.files[0];
                 document.getElementById('editToolsSection').style.display = 'block';
 
-                extractMetadata(firstFile);
-
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const visualSection = document.getElementById('visualResizeSection');
@@ -695,11 +673,13 @@
                     const visualImg = document.getElementById('visualSourceImg');
                     visualImg.src = e.target.result;
                     visualImg.onload = function() {
-                        horizontalInput.value = visualImg.naturalWidth;
-                        verticalInput.value = visualImg.naturalHeight;
+                        originalImageWidth = visualImg.naturalWidth;
+                        originalImageHeight = visualImg.naturalHeight;
+                        horizontalInput.value = originalImageWidth;
+                        verticalInput.value = originalImageHeight;
                         visualSection.style.display = 'block';
                         visualContainer.style.display = 'block';
-                        visualBox.style.width = visualImg.naturalWidth + 'px';
+                        visualBox.style.width = originalImageWidth + 'px';
                         visualBox.style.maxWidth = '100%';
                     };
                 };
@@ -711,42 +691,28 @@
             }
         });
 
-        function extractMetadata(file) {
-            const metaContainer = document.getElementById('metaContainer');
-            metaContainer.innerHTML = '';
+        // Aspect Ratio Auto-Calculation Logic
+        horizontalInput.addEventListener('input', function() {
+            if (keepAspectInput.checked && originalImageWidth > 0 && originalImageHeight > 0 && this.value) {
+                const w = parseFloat(this.value);
+                if (!isNaN(w)) {
+                    const h = Math.round(w * (originalImageHeight / originalImageWidth));
+                    verticalInput.value = h;
+                    visualBox.style.width = Math.min(w, visualBox.parentElement.clientWidth) + 'px';
+                }
+            }
+        });
 
-            const formatBytes = (bytes) => {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-            };
-
-            const basicInfo = [
-                { label: 'File Name', value: file.name },
-                { label: 'File Type', value: file.type || 'Unknown' },
-                { label: 'File Size', value: formatBytes(file.size) },
-                { label: 'Last Modified', value: new Date(file.lastModified).toLocaleString() }
-            ];
-
-            basicInfo.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'meta-item';
-                div.innerHTML = `<strong>${item.label}:</strong> ${item.value}`;
-                metaContainer.appendChild(div);
-            });
-
-            const img = new Image();
-            const url = URL.createObjectURL(file);
-            img.onload = function() {
-                URL.revokeObjectURL(url);
-                const divDim = document.createElement('div');
-                divDim.className = 'meta-item';
-                divDim.innerHTML = `<strong>Dimensions:</strong> ${img.naturalWidth} x ${img.naturalHeight} px`;
-                metaContainer.appendChild(divDim);
-            };
-            img.src = url;
-        }
+        verticalInput.addEventListener('input', function() {
+            if (keepAspectInput.checked && originalImageWidth > 0 && originalImageHeight > 0 && this.value) {
+                const h = parseFloat(this.value);
+                if (!isNaN(h)) {
+                    const w = Math.round(h * (originalImageWidth / originalImageHeight));
+                    horizontalInput.value = w;
+                    visualBox.style.width = Math.min(w, visualBox.parentElement.clientWidth) + 'px';
+                }
+            }
+        });
 
         function getTransform(index = 0) {
             if (!imageTransformations[index]) {
@@ -816,6 +782,10 @@
             let newWidth = Math.max(50, startWidth + dx);
             let newHeight = Math.max(50, startHeight + dy);
 
+            if (keepAspectInput.checked && originalImageWidth > 0 && originalImageHeight > 0) {
+                newHeight = Math.round(newWidth * (originalImageHeight / originalImageWidth));
+            }
+
             if (newWidth <= 5000 && newHeight <= 5000) {
                 visualBox.style.width = newWidth + 'px';
                 horizontalInput.value = Math.round(newWidth);
@@ -842,6 +812,9 @@
                 horizontalInput.value = '';
                 verticalInput.value = '';
                 document.getElementById('preset').value = '';
+            } else if (originalImageWidth > 0) {
+                horizontalInput.value = originalImageWidth;
+                verticalInput.value = originalImageHeight;
             }
         }
 
