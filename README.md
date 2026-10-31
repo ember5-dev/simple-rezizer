@@ -1,111 +1,81 @@
 # Simple Resizer
 
-Um redimensionador de imagens simples e rápido que funciona diretamente no navegador.
+> Redimensione, converta e exporte imagens em lote — 100% no navegador,
+> sem upload, sem servidor, sem cadastro.
 
-O **Simple Resizer** permite redimensionar imagens, ajustar sua qualidade e exportá-las em diferentes formatos sem precisar enviar os arquivos para um servidor.
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![No Backend](https://img.shields.io/badge/backend-none-brightgreen)]()
+[![Vanilla JS](https://img.shields.io/badge/JS-vanilla-yellow)]()
 
-## ✨ Funcionalidades
+![Demo do Simple Resizer](docs/demo.gif)
 
-* Redimensionar imagens por largura e altura
-* Redimensionar várias imagens de uma vez
-* Exportar em **PNG, JPEG e WebP**
-* Ajustar a qualidade da imagem
-* Preservar ou alterar a proporção
-* Fundo transparente
-* Diferentes modos de redimensionamento
-* Presets de dimensões
-* Pré-visualização antes e depois
-* Zoom na pré-visualização
-* Download individual
-* Download em lote
-* Exportação de várias imagens em `.zip`
-* Interface responsiva
-* Processamento local no navegador
+Ferramenta web para **redimensionar, converter e exportar imagens** diretamente
+no navegador. Suporta **lote**, **PNG/JPEG/WebP**, **controle de qualidade** e
+**download em ZIP** — tudo processado localmente com **Canvas API**. Suas imagens
+nunca saem do seu computador.
 
-## 🔒 Privacidade
-
-As imagens são processadas **localmente no navegador**.
-
-O Simple Resizer não precisa enviar suas imagens para um servidor para realizar o redimensionamento.
-
-## 🚀 Como usar
-
-Você pode usar o projeto diretamente pelo navegador ou executá-lo localmente.
-
-### Executar localmente
-
-Clone o repositório:
-
-```bash
-git clone https://github.com/gnu1672/simple-resizer.git
-```
-
-Entre na pasta:
-
-```bash
-cd simple-resizer
-```
-
-Abra o `simple-rezizer` no navegador.
-
-Não é necessário instalar dependências.
-
-## 🛠️ Tecnologias
-- HTML
-- CSS
-- JavaScript
-- JSZip                               
-## 📁 Estrutura
-```text
-simple-resizer/
-├── simple-resizer.html
-├── README.md
-└── LICENSE
-```
-
-## 🌐 Compatibilidade
-
-Funciona em navegadores modernos, incluindo:
-
-* Chrome
-* Edge
-* Firefox
-* Safari
-
-## 🗺️ Roadmap
-
-* [ ] Drag and drop de imagens
-* [ ] Mais presets
-* [X] Rotação de imagens
-* [X] Espelhamento
-* [] Mais opções de otimização
-* [X] Modo escuro
-* [ ] Mais formatos de exportação
-
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas.
-
-Se encontrar um bug ou tiver uma sugestão, abra uma **Issue**.
-
-Para contribuir com código:
-
-1. Faça um Fork do projeto
-2. Crie uma branch para sua alteração
-3. Faça suas modificações
-4. Faça um commit
-5. Abra um Pull Request
-
-## 📄 Licença
-
-Este projeto está licenciado sob a **GNU General Public License v3.0 (GPL-3.0)**.
-
-Consulte o arquivo [`LICENSE`](LICENSE) para mais informações.
-
-## ⭐ Apoie o projeto
-
-Se o Simple Resizer for útil para você, considere dar uma **star** no repositório.
+**[🔗 Demo online](https://gnu1672.github.io/simple-resizer)** ·
+**[🐛 Reportar bug](https://github.com/gnu1672/simple-resizer/issues)** ·
+**[💡 Sugerir feature](https://github.com/gnu1672/simple-resizer/issues)**
 
 ---
 
-Feito com HTML, CSS e JavaScript.
+## 🤔 Por que existe
+
+A maioria dos redimensionadores online faz **upload da sua imagem para um servidor**.
+Isso significa espera, exposição de dados e, muitas vezes, cadastro obrigatório.
+
+O **Simple Resizer** processa tudo **localmente** com a **Canvas API** do navegador:
+- Suas imagens **nunca** são enviadas para servidor
+- Funciona **offline** depois de carregar a página
+- **Sem cadastro, sem anúncios, sem limite de uso**
+- **Single-file HTML** (~X KB) — fácil de hospedar em qualquer lugar
+
+## ✨ Funcionalidades
+
+### Redimensionamento
+- Redimensionar por **largura, altura ou porcentagem**
+- **Múltiplas imagens** de uma vez
+- **Preservar proporção** (com opção de desativar)
+- Diferentes **modos de redimensionamento**
+- **Presets** de dimensões comuns
+- **Rotação** e **espelhamento**
+- **Fundo transparente** para PNG/WebP
+
+### Exportação
+- **PNG, JPEG e WebP**
+- Ajuste de **qualidade** (JPEG/WebP)
+- **Download individual** ou **em lote**
+- **Exportação em ZIP** de várias imagens de uma vez
+
+### Pré-visualização
+- **Antes e depois** lado a lado
+- **Zoom** na pré-visualização
+- **Interface responsiva** (desktop e mobile)
+- **Modo escuro**
+
+### Privacidade
+- 🔒 **Processamento 100% local** — nada é enviado para servidor
+- Sem cookies, sem analytics, sem rastreamento
+- Funciona **offline** após o primeiro carregamento
+
+<p align="center">
+  <img src="docs/desktop.png" alt="Interface desktop" width="600">
+  <br>
+  <img src="docs/mobile.png" alt="Interface mobile" width="250">
+</p>
+
+## 🚀 Como usar
+
+### Online (recomendado)
+1. Abra o **[demo online](https://gnu1672.github.io/simple-resizer)**
+2. Arraste imagens ou clique para selecionar
+3. Ajuste dimensões, formato e qualidade
+4. Baixe individualmente ou em **ZIP**
+
+### Localmente
+Não precisa instalar nada — é um único arquivo HTML.
+
+```bash
+git clone https://github.com/gnu1672/simple-resizer.git
+cd simple-resizer
